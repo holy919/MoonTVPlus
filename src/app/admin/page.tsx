@@ -14697,6 +14697,24 @@ function AdminPageClient() {
             </div>
           )}
 
+          {/* 视频源过多提示 */}
+          {config && (config.SourceConfig?.length ?? 0) > 50 && (
+            <div className='bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4'>
+              <div className='flex items-start gap-3'>
+                <div className='flex-shrink-0 mt-0.5'>
+                  <svg className='w-5 h-5 text-amber-600 dark:text-amber-400' fill='currentColor' viewBox='0 0 20 20'>
+                    <path fillRule='evenodd' d='M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l6.518 11.591c.75 1.334-.213 2.99-1.742 2.99H3.48c-1.53 0-2.492-1.656-1.743-2.99L8.257 3.1zM11 13a1 1 0 10-2 0 1 1 0 002 0zm-1-6a1 1 0 00-1 1v3a1 1 0 102 0V8a1 1 0 00-1-1z' clipRule='evenodd' />
+                  </svg>
+                </div>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-amber-800 dark:text-amber-300'>
+                    当前视频源数量较多，可能会拖慢搜索与优选速度，建议适当精简
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 配置文件标签 - 仅站长可见 */}
           {role === 'owner' && (
             <CollapsibleTab
