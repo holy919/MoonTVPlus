@@ -444,6 +444,35 @@ export default function MusicPage() {
     localStorage.setItem('musicPlayState', JSON.stringify(playState));
   };
 
+  // 清空当前播放状态，并在需要时停止正在播放的音频
+  const clearCurrentPlaybackState = () => {
+    const audio = audioRef.current;
+
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+    }
+
+    setIsPlaying(false);
+    setCurrentSong(null);
+    setCurrentSongIndex(-1);
+    setCurrentSongUrl('');
+    setCurrentTime(0);
+    setDuration(0);
+    setLyrics([]);
+    setCurrentLyricIndex(-1);
+    setShowPlayer(false);
+    setShowLyrics(false);
+    setShowPiPLyrics(false);
+    setPendingSongToPlay(null);
+    restoredTimeRef.current = 0;
+    lastSaveTimeRef.current = 0;
+    currentTimeRef.current = 0;
+
+    localStorage.removeItem('musicPlayState');
+  };
+
   // 从 localStorage 恢复播放状态（已废弃，现在统一使用数据库）
   const restorePlayState = async () => {
     // 此函数已不再使用，所有状态恢复都在 initializePlayState 中完成
@@ -1315,6 +1344,53 @@ export default function MusicPage() {
     const currentIndex = qualities.indexOf(quality);
     const nextIndex = (currentIndex + 1) % qualities.length;
     setQuality(qualities[nextIndex]);
+  };
+
+  // 清空播放记录
+  const handleClearPlayRecords = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: '确认清空',
+      message: '确定要清空全部播放记录吗？',
+      onConfirm: async () => {
+        try {
+          await fetch('/api/music/v2/history', { method: 'DELETE' });
+          clearCurrentPlaybackState();
+          setPlaylist([]);
+          setPlayRecords([]);
+          setPlaylistIndex(-1);
+          setToast({
+            message: '播放记录已清空',
+            type: 'success',
+            onClose: () => setToast(null),
+          });
+        } catch (error) {
+          console.error('清空播放记录失败:', error);
+          setToast({
+            message: '清空播放记录失败',
+            type: 'error',
+            onClose: () => setToast(null),
+          });
+        } finally {
+          setConfirmModal({
+            isOpen: false,
+            title: '',
+            message: '',
+            onConfirm: () => {},
+            onCancel: () => {},
+          });
+        }
+      },
+      onCancel: () => {
+        setConfirmModal({
+          isOpen: false,
+          title: '',
+          message: '',
+          onConfirm: () => {},
+          onCancel: () => {},
+        });
+      },
+    });
   };
 
   // 切换播放模式
@@ -2668,18 +2744,7 @@ export default function MusicPage() {
               <div className="flex items-center gap-2">
                 {playlist.length > 0 && (
                   <button
-                    onClick={async () => {
-                      if (confirm('确定要清空全部播放记录吗？')) {
-                        try {
-                          await fetch('/api/music/v2/history', { method: 'DELETE' });
-                          setPlaylist([]);
-                          setPlayRecords([]);
-                          setPlaylistIndex(-1);
-                        } catch (error) {
-                          console.error('清空播放记录失败:', error);
-                        }
-                      }
-                    }}
+                    onClick={handleClearPlayRecords}
                     className="px-3 py-1 text-xs rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors border border-red-500/50"
                     title="清空全部"
                   >
